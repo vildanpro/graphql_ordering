@@ -1,0 +1,56 @@
+{
+  "app": {
+    "name": "Gelios-App",
+    "secret_key": "***",
+    "start_host": "0.0.0.0",
+    "start_port": 8080,
+    "debug": true,
+    "debug_port": 3000,
+    "debug_secret": "***",
+    "mongodb_settings": {
+      "alias": "default",
+      "db": "***",
+      "host": "***",
+      "port": 27017,
+      "username": "***",
+      "password": "***",
+      "authentication_source": "admin"
+    }  
+  },
+  "redis": {
+      "host": "redis"
+  },
+  "database": {
+    "alias": "default",
+    "server": "db01.itpc.ru",
+    "database": "***",
+    "user": "***",
+    "password": "***"
+  },
+  "logging": {
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+      "c_short": {
+        "format": "%(asctime)s.%(msecs)05d - [%(levelname)s] - %(name)s : %(message)s",
+        "datefmt": "%Y-%m-%d %H:%M:%S"
+      }
+    },
+    "handlers": {
+      "default_stream": {
+        "class": "logging.StreamHandler",
+        "level": "DEBUG",
+        "formatter": "c_short"
+      }
+    },
+    "loggers": {
+      "": {
+        "handlers": [
+          "default_stream"
+        ],
+        "level": "DEBUG",
+        "propagate": true
+      }
+    }
+  }
+}

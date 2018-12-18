@@ -1,0 +1,45 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - test
+  - build
+
+test:
+  image: $CI_REGISTRY/devops/docker/baseimages/python:1.0
+  except:
+    - master
+  tags:
+    - docker
+  script:
+    - make requirements ENV=testing
+    - make lint
+    - make coverage
+    - coverage html
+  artifacts:
+    paths:
+      - htmlcov
+    expire_in: 1 days
+  when: manual
+
+.build_job: &build_job
+  stage: build
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  tags:
+    - image
+
+build_production:
+  <<: *build_job
+  only: 
+    - master
+  script:
+    - docker image build -t $CI_REGISTRY_IMAGE --no-cache --rm --pull .
+    - docker image push $CI_REGISTRY_IMAGE
+
+build_develop:
+  <<: *build_job
+  only: 
+    - develop
+  script:
+    - docker image build -t $CI_REGISTRY_IMAGE --no-cache --rm --pull .

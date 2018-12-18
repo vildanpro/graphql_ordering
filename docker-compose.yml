@@ -1,0 +1,20 @@
+version: '3.1'
+
+services:
+  graphql_ordering:
+    build: .
+    image: graphql_ordering
+    command: run
+    ports:
+      - 8080:8080
+    volumes:
+      - .:/app/project
+      - ./configuration:/app/data
+    depends_on:
+      - mongodb
+  mongodb:
+    image: snakeego/mongodb:3.6
+    environment:
+      - MONGODB_DATABASE=test1
+    ports:
+      - 27017:27017

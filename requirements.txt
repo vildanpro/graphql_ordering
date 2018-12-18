@@ -1,0 +1,16 @@
+Flask
+Flask-Script
+Flask-Restful
+Flask-Mongoengine
+flask-graphql
+graphene
+flask_sqlalchemy
+sqlalchemy
+graphene_sqlalchemy
+graphene_mongo
+
+
+gunicorn
+eventlet
+Petrovich
+pyjwt

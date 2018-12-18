@@ -1,0 +1,8 @@
+[submodule "Config"]
+	path = __submodules__/config
+	url = ../libs/config.git
+	branch = master
+[submodule "MSSQLWrappers"]
+	path = __submodules__/mssql
+	url = ../libs/mssql.git
+	branch = master

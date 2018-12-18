@@ -1,0 +1,6 @@
+include MANIFEST.in 
+include requirements.txt
+include setup.py
+
+recursive-include __submodules__/ *
+recursive-exclude __submodules__/ .git*
