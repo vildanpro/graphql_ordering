@@ -15,6 +15,6 @@ services:
   mongodb:
     image: snakeego/mongodb:3.6
     environment:
-      - MONGODB_DATABASE=test1
+      - MONGODB_DATABASE=test
     ports:
       - 27017:27017

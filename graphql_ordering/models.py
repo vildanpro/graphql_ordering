@@ -1,32 +1,38 @@
 from mongoengine import Document
-from mongoengine.fields import IntField, FloatField, ReferenceField, StringField
-
-
-class Period(Document):
-
-    meta = {'collection': 'period'}
-    name = StringField()
-
-
-class Service(Document):
-
-    meta = {'collection': 'service'}
-    name = StringField()
-    cod_u = StringField()
-
-
-class Supplier(Document):
-
-    meta = {'collection': 'supplier'}
-    name = StringField()
-    i_owner = StringField()
+from mongoengine.fields import IntField, FloatField, StringField
+from marshmallow_mongoengine import ModelSchema
 
 
 class Money(Document):
-
     meta = {'collection': 'money'}
-    amount = FloatField()
+
+    id = IntField(primary_key=True)
+    cod_pl = IntField()
+    s_money = FloatField()
     typerec = IntField()
-    period = ReferenceField(Period)
-    supplier = ReferenceField(Supplier)
-    service = ReferenceField(Service)
+    for_period = IntField()
+    i_owner = IntField()
+    supplier = StringField()
+    cod_u = IntField()
+    servicename = StringField()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'cod_pl': self.cod_pl,
+            's_money': self.s_money,
+            'typerec': self.typerec,
+            'for_period': self.for_period,
+            'i_owner': self.i_owner,
+            'supplier': self.supplier,
+            'cod_u': self.cod_u,
+            'servicename': self.servicename
+        }
+
+
+class MoneySchema(ModelSchema):
+    class Meta:
+        model = Money
+
+
+money_schema = MoneySchema()

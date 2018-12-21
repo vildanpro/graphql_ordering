@@ -8,8 +8,8 @@ flask_sqlalchemy
 sqlalchemy
 graphene_sqlalchemy
 graphene_mongo
-
-
+marshmallow-mongoengine
+marshmallow
 gunicorn
 eventlet
 Petrovich

@@ -19,7 +19,5 @@ def create_app(app=None, config=None):
 	app.config.from_object(config.extract('app', uppercase=True))
 	v1().init_app(app)
 	ms(**config.database)
-
 	app.add_url_rule('/graphql', view_func=GraphQLView.as_view('graphql', schema=schema, graphiql=True))
-
 	return app

@@ -1,7 +1,8 @@
 from logging import getLogger
+from pprint import pprint
 from flask_restful import Api, Resource
-from .database import init_db
-
+from .models import Money
+from .database import load_data_to_mongo, get_periods, get_suppliers
 
 __all__ = ["create_api"]
 __doc__ = "Information about api"
@@ -21,4 +22,9 @@ def create_api(api=None):
 
 class CodPl(Resource):
     def get(self, cod_pl):
-        return init_db(cod_pl)
+        if not Money.objects(cod_pl=cod_pl)[:1]:
+            data = load_data_to_mongo(cod_pl)
+        periods_and_suppliers = dict()
+        periods_and_suppliers['periods'] = get_periods()
+        periods_and_suppliers['suppliers'] = get_suppliers()
+        return periods_and_suppliers

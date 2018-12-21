@@ -1,63 +1,47 @@
+import json
 from pprint import pprint
-
 from mongoengine import connect
-from .models import Service, Supplier, Period, Money
-from .mssqldb import MSqlDBLoader
-from flask import json
+from .mssqldb import MSqlDBLoader as Loader
+from .cluster import cluster
+from .models import Money, money_schema
 
-
-# connect('graphene-mongo-example', host='mongomock://localhost', alias='default')
 
 connect('test', host='mongodb', port=27017)
 
 
-def init_db(cod_pl):
-    data = MSqlDBLoader().mssql_query(cod_pl)
-    period_list = []
-    cod_u__list = []
-    i_owner_list = []
-    with open('data.txt', 'w') as f:
-        for i in data:
-            f.write(json.dumps(i, default=str, sort_keys=True, indent=4, ensure_ascii=False))
-    for i in data:
-        period_field = str(i['for_period'])
-        cod_u_field = str(i['cod_u'])
-        servicename_field = str(i['servicename'])
-        i_owner_field = str(i['i_owner'])
-        supplier_field = str(i['supplier'])
-        amount_field = float(i['s_money'])
-        typerec_field = int(i['typerec'])
+def get_data_from_mssql(cod_pl):
+    return Loader().query_to_mssql(cod_pl)
 
-        if period_field not in period_list:
-            period = Period(name=period_field)
-            period.save()
-            period_list.append(period_field)
-            print(period_field, 'ADDED')
-        else:
-            period = Period.objects.get(name=period_field)
 
-        if cod_u_field not in cod_u__list:
-            servicename = Service(name=servicename_field, cod_u=cod_u_field)
-            servicename.save()
-            cod_u__list.append(cod_u_field)
-            print(servicename_field, cod_u_field, 'ADDED')
-        else:
-            servicename = Service.objects.get(cod_u=cod_u_field)
+def get_periods():
+    data = list(set(Money.objects.distinct('for_period')))
+    data_group = cluster(data, 1)
+    periods = []
+    for item in data_group:
+        first = item[0]
+        last = item[-1]
+        period = str(first) + '-' + str(last)
+        periods.append(period)
+    return periods
 
-        if i_owner_field not in i_owner_list:
-            supplier = Supplier(name=supplier_field, i_owner=i_owner_field)
-            supplier.save()
-            i_owner_list.append(i_owner_field)
-            print(supplier_field, i_owner_field, 'ADDED')
-        else:
-            supplier = Supplier.objects.get(i_owner=i_owner_field)
 
-        money = Money(
-            amount=amount_field, typerec=typerec_field, period=period, supplier=supplier,
-            service=servicename
-        )
-        money.save()
-    return json.dumps(data, default=str, sort_keys=True, indent=4, ensure_ascii=False)
+def get_suppliers():
+    i_owner_set = set(Money.objects.distinct('i_owner'))
+    suppliers = list()
+    for i_owner in i_owner_set:
+        supplier = Money.objects(i_owner=i_owner).distinct('supplier')
+        supplier_dict = dict()
+        supplier_dict['i_owner'] = i_owner
+        supplier_dict['supplier'] = supplier[0]
+        suppliers.append(supplier_dict)
+    return suppliers
+
+
+def load_data_to_mongo(cod_pl):
+    data = get_data_from_mssql(cod_pl)
+    for item in data:
+        d, errors = money_schema.load(item)
+        d.save()
 
 
 
