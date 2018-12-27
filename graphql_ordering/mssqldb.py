@@ -11,7 +11,7 @@ SELECT t.[COD_PL]
      ,t.[for_period]
      ,t.[TypeRec]
      ,t.[s_money]
-     ,t.[I_OWNER],
+     ,o.I_Owner,
    serviceName=isnull(sg_2.GroupName, sg_1.GroupName),
    o.NAME AS Supplier
  FROM

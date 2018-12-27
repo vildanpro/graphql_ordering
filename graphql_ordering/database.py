@@ -47,6 +47,18 @@ def get_suppliers():
     return suppliers
 
 
+def get_servicenames():
+    servicename_set = set(Money.objects.distinct('cod_u'))
+    servicenames = list()
+    for cod_u in servicename_set:
+        servicename = Money.objects(cod_u=cod_u).distinct('servicename')
+        servicename_dict = dict()
+        servicename_dict['cod_u'] = cod_u
+        servicename_dict['servicename'] = servicename[0]
+        servicenames.append(servicename_dict)
+    return servicenames
+
+
 def load_data_to_mongo(cod_pl):
     if cod_pl:
         data = get_data_from_mssql(cod_pl)

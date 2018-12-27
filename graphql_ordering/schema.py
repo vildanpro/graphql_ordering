@@ -1,18 +1,8 @@
 import graphene
-from pprint import pprint
 from flask import json
-from graphene.relay import Node
-from graphene_mongo import MongoengineObjectType, MongoengineConnectionField
-
-
 from .models import Money as MoneyModel
-from .database import load_data_to_mongo, get_suppliers, get_periods
-
-
-class Money(MongoengineObjectType):
-    class Meta:
-        model = MoneyModel
-        interfaces = (Node,)
+from .database import load_data_to_mongo, get_suppliers, get_periods, get_servicenames
+from pprint import pprint
 
 
 class Supplier(graphene.ObjectType):
@@ -20,9 +10,9 @@ class Supplier(graphene.ObjectType):
     supplier = graphene.String()
 
 
-class Supplier(graphene.ObjectType):
-    i_owner = graphene.Int()
-    supplier = graphene.String()
+class Servicename(graphene.ObjectType):
+    cod_u = graphene.Int()
+    servicename = graphene.String()
 
 
 class Periods(graphene.ObjectType):
@@ -30,8 +20,6 @@ class Periods(graphene.ObjectType):
 
 
 class Query(graphene.ObjectType):
-    node = Node.Field()
-    money = MongoengineConnectionField(Money)
 
     reload_data = graphene.String(
         cod_pl=graphene.Argument(graphene.Int, required=False)
@@ -53,21 +41,34 @@ class Query(graphene.ObjectType):
         response = json.dumps(response)
         return json.loads(response)
 
-    suppliers = graphene.List(Supplier, cod_pl=graphene.Argument(graphene.Int, required=False))
+    suppliers = graphene.List(Supplier, cod_pl=graphene.Argument(graphene.Int))
 
     def resolve_suppliers(self, info, cod_pl=None):
+        if not MoneyModel.objects(cod_pl=cod_pl).first():
+            load_data_to_mongo(cod_pl)
+
+        suppliers = get_suppliers()
+        suppliers_as_obj_list = []
+        for item in suppliers:
+            supplier = Supplier(item['i_owner'], item['supplier'])
+            suppliers_as_obj_list.append(supplier)
+        return suppliers_as_obj_list
+
+    servicenames = graphene.List(Servicename, cod_pl=graphene.Argument(graphene.Int, required=False))
+
+    def resolve_servicenames(self, info, cod_pl=None):
         if cod_pl:
             if MoneyModel.objects(cod_pl=cod_pl).first():
-                suppliers = get_suppliers()
-                suppliers_as_obj_list = []
-                for item in suppliers:
-                    supplier = Supplier(item['i_owner'], item['supplier'])
-                    suppliers_as_obj_list.append(supplier)
-                return suppliers_as_obj_list
+                servicenames = get_servicenames()
+                servicenames_as_obj_list = []
+                for item in servicenames:
+                    servicename = Servicename(item['cod_u'], item['servicename'])
+                    servicenames_as_obj_list.append(servicename)
+                return servicenames_as_obj_list
             else:
                 load_data_to_mongo(cod_pl)
-                suppliers = json.dumps(get_suppliers())
-                return json.loads(suppliers)
+                servicenames = json.dumps(get_servicenames())
+                return json.loads(servicenames)
 
     range_periods = graphene.String(
         start_period=graphene.Argument(graphene.Int, required=False),
@@ -92,4 +93,4 @@ class Query(graphene.ObjectType):
             return periods_obj_list
 
 
-schema = graphene.Schema(query=Query, types=[Money], auto_camelcase=False)
+schema = graphene.Schema(query=Query, auto_camelcase=False)
