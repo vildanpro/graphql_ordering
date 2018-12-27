@@ -13,15 +13,25 @@ def get_data_from_mssql(cod_pl):
     return Loader().query_to_mssql(cod_pl)
 
 
-def get_periods():
-    data = list(set(Money.objects.distinct('for_period')))
-    data_group = cluster(data, 1)
-    periods = []
-    for item in data_group:
-        first = item[0]
-        last = item[-1]
-        period = str(first) + '-' + str(last)
-        periods.append(period)
+def get_periods(i_owner=None):
+    if i_owner:
+        data = list(set(Money.objects(i_owner=i_owner).distinct('for_period')))
+        data_group = cluster(data, 1)
+        periods = []
+        for item in data_group:
+            first = item[0]
+            last = item[-1]
+            period = str(first) + '-' + str(last)
+            periods.append(period)
+    else:
+        data = list(set(Money.objects.distinct('for_period')))
+        data_group = cluster(data, 1)
+        periods = []
+        for item in data_group:
+            first = item[0]
+            last = item[-1]
+            period = str(first) + '-' + str(last)
+            periods.append(period)
     return periods
 
 
@@ -38,10 +48,11 @@ def get_suppliers():
 
 
 def load_data_to_mongo(cod_pl):
-    data = get_data_from_mssql(cod_pl)
-    for item in data:
-        d, errors = money_schema.load(item)
-        d.save()
+    if cod_pl:
+        data = get_data_from_mssql(cod_pl)
+        for item in data:
+            d, errors = money_schema.load(item)
+            d.save()
 
 
 
