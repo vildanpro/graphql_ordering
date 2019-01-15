@@ -1,10 +1,9 @@
-import json
 from logging import getLogger
-from pprint import pprint
+from flask import json
 from flask_restful import Api, Resource
 from .models import Money
-from .database import load_data_to_mongo, get_periods, get_suppliers
-from .schema import schema
+from .database import get_ranges_of_periods, get_suppliers, load_data_to_mongo
+
 
 __all__ = ["create_api"]
 __doc__ = "Information about api"
@@ -17,57 +16,23 @@ def create_api(api=None):
     if getattr(api, '__created__', None):
         return api
 
-    api.add_resource(CodPl, '/codpl/<int:cod_pl>', endpoint='codpl')
-    api.add_resource(ByOwner, '/byowner/<int:i_owner>', endpoint='byowner')
-    api.add_resource(ByPeriod, '/byperiod/<int:period_>', endpoint='byperiod')
-    api.add_resource(GetForMakePdf,
-                     '/getpdf/<int:cod_pl>/<int:i_owner>/<int:s_period>/<int:e_period>',
-                     endpoint='getpdf')
+    api.add_resource(GetSuppliers, '/get_suppliers/<int:cod_pl>', endpoint='get_suppliers')
+    api.add_resource(GetPeriods, '/get_periods/<int:cod_pl>/<int:i_owner>', endpoint='get_periods')
+    api.add_resource(GetPdf, '/get_periods/<int:cod_pl>/<int:i_owner>', endpoint='get_pdf')
 
     api.__created__ = True
     return api
 
 
-class CodPl(Resource):
+class GetPdf(Resource):
+    pass
+
+
+class GetSuppliers(Resource):
     def get(self, cod_pl):
-        if not Money.objects(cod_pl=cod_pl)[:1]:
-            data = load_data_to_mongo(cod_pl)
-        periods_and_suppliers = dict()
-        periods_and_suppliers['periods'] = get_periods()
-        periods_and_suppliers['suppliers'] = get_suppliers()
-        return periods_and_suppliers
+        return get_suppliers(cod_pl)
 
 
-class ByOwner(Resource):
-    def get(self, i_owner):
-        if i_owner:
-            periods = dict()
-            periods['periods'] = get_periods(i_owner)
-            return periods
-
-
-class ByPeriod(Resource):
-    def get(self, i_owner):
-        if i_owner:
-            periods = dict()
-            periods['periods'] = get_periods(i_owner)
-            return periods
-
-
-class GetForMakePdf(Resource):
-    def get(self, i_owner, s_period, e_period, cod_pl):
-        if not Money.objects(cod_pl=cod_pl)[:1]:
-            data = load_data_to_mongo(cod_pl)
-        # data = Money.objects(cod_pl=cod_pl)
-        # data = data.objects(i_owner=i_owner)
-        # data = data.objects(for_period__lt=e_period)
-        # data = data.objects(for_period__gt=s_period)
-        data = Money.objects(cod_pl=cod_pl,
-                             i_owner=i_owner,
-                             for_period__lt=e_period,
-                             for_period__gt=s_period
-                             ).to_json()
-
-        pprint(set(Money.objects.distinct("typerec")))
-
-        return data
+class GetPeriods(Resource):
+    def get(self, cod_pl, i_owner):
+        return get_ranges_of_periods(cod_pl=cod_pl, i_owner=i_owner)

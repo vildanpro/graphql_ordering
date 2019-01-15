@@ -16,19 +16,6 @@ class Money(Document):
     cod_u = IntField()
     servicename = StringField()
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'cod_pl': self.cod_pl,
-            's_money': self.s_money,
-            'typerec': self.typerec,
-            'for_period': self.for_period,
-            'i_owner': self.i_owner,
-            'supplier': self.supplier,
-            'cod_u': self.cod_u,
-            'servicename': self.servicename
-        }
-
 
 class MoneySchema(ModelSchema):
     class Meta:
