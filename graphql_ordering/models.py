@@ -17,6 +17,13 @@ class Money(Document):
     servicename = StringField()
 
 
+class Owner(Document):
+    meta = {'collection': 'owner'}
+
+    i_owner = IntField()
+    supplier = StringField()
+
+
 class MoneySchema(ModelSchema):
     class Meta:
         model = Money

@@ -24,13 +24,15 @@ def load_data_to_mongo(cod_pl):
         for item in data_sql:
             d, errors = money_schema.load(item)
             d.save()
+
+
     return True
 
 
 def get_suppliers(cod_pl):
     if load_data_to_mongo(cod_pl):
         pipeline = [
-            {'$group': {'_id': {'i_owner': '$i_owner', 'supplier': '$supplier'}}},
+            {'$group': {'_id': {'i_owner': '$i_owner', 'supplier': '$supplier', 'cod_pl': '$cod_pl'}}},
             {'$sort': {'_id.i_owner': 1}}
         ]
         cursor = Money.objects.aggregate(*pipeline)
@@ -238,6 +240,6 @@ def get_order_data(cod_pl, i_owner, range_of_periods):
         }
     ]
     cursor = Money.objects.aggregate(*pipeline)
-    pprint(list(cursor))
     return list(cursor)
+
 
