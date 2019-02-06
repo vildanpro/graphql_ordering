@@ -3,7 +3,7 @@ from config.json import Config
 from logging.config import dictConfig
 from .api_v1 import create_api as v1
 from mssql import connect as ms
-from .db import MSqlDBLoader
+from .db import DataLoader
 from flask_graphql import GraphQLView
 from .schema import schema
 

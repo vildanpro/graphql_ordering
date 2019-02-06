@@ -1,6 +1,6 @@
 from logging import getLogger
 from flask_restful import Api, Resource
-from .db import MSqlDBLoader as sql
+from .db import DataLoader
 
 __all__ = ["create_api"]
 __doc__ = "Information about api"
@@ -21,8 +21,8 @@ def create_api(api=None):
 
 class Test(Resource):
     def get(self, cod_pl):
-        if isinstance(cod_pl, int):
-            return sql().query_data(cod_pl)
+        if DataLoader().load_data_from_sql(cod_pl):
+            return True
         else:
             return {
                 "Error": "Type of COD_PL must be INT"
