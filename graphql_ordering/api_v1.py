@@ -1,9 +1,6 @@
 from logging import getLogger
-from flask import json
 from flask_restful import Api, Resource
-from .models import Money
-from .database import get_ranges_of_periods, get_suppliers, load_data_to_mongo
-
+from .db import MSqlDBLoader as sql
 
 __all__ = ["create_api"]
 __doc__ = "Information about api"
@@ -16,23 +13,18 @@ def create_api(api=None):
     if getattr(api, '__created__', None):
         return api
 
-    api.add_resource(GetSuppliers, '/get_suppliers/<int:cod_pl>', endpoint='get_suppliers')
-    api.add_resource(GetPeriods, '/get_periods/<int:cod_pl>/<int:i_owner>', endpoint='get_periods')
-    api.add_resource(GetPdf, '/get_periods/<int:cod_pl>/<int:i_owner>', endpoint='get_pdf')
+    api.add_resource(Test, '/test/<int:cod_pl>/', endpoint='test')
 
     api.__created__ = True
     return api
 
 
-class GetPdf(Resource):
-    pass
-
-
-class GetSuppliers(Resource):
+class Test(Resource):
     def get(self, cod_pl):
-        return get_suppliers(cod_pl)
+        if isinstance(cod_pl, int):
+            return sql().query_data(cod_pl)
+        else:
+            return {
+                "Error": "Type of COD_PL must be INT"
+            }
 
-
-class GetPeriods(Resource):
-    def get(self, cod_pl, i_owner):
-        return get_ranges_of_periods(cod_pl=cod_pl, i_owner=i_owner)

@@ -1,119 +1,111 @@
-import graphene
-from flask import json
-from .models import Money as MoneyModel
-from .database import load_data_to_mongo, get_suppliers, get_ranges_of_periods, get_order_data, get_owner_periods
-from pprint import pprint
+from graphene import ObjectType, String, Int, List, Argument, Schema, Date, Float
+from .db import MSqlDBLoader as Sql
+from .db import get_supplers, get_services, get_periods, get_periods_by_owner, get_order_data
 
 
-class Supplier(graphene.ObjectType):
-    i_owner = graphene.Int()
-    supplier = graphene.String()
+class SuppliersObject(ObjectType):
+    i_owner = Int()
+    supplier = String()
 
 
-class Servicename(graphene.ObjectType):
-    cod_u = graphene.Int()
-    servicename = graphene.String()
+class ServicesObject(ObjectType):
+    cod_u = Int()
+    servicename = String()
 
 
-class RangesOfPeriods(graphene.ObjectType):
-    range_periods = graphene.String()
+class PeriodsObject(ObjectType):
+    for_period = Date()
 
 
-class OwnerPeriods(graphene.ObjectType):
-    owner_period = graphene.Int()
+class PeriodsByOwnerObject(ObjectType):
+    for_period = Date()
 
 
-class Order(graphene.ObjectType):
-    cod_pl = graphene.Int()
-    for_period = graphene.Int()
-    i_owner = graphene.Int()
-    supplier = graphene.String()
-    cod_u = graphene.Int()
-    servicename = graphene.String()
-    typerec_1 = graphene.Float()
-    typerec_2 = graphene.Float()
-    typerec_minus60 = graphene.Float()
-    typerec_6 = graphene.Float()
-    typerec_7 = graphene.Float()
-    typerec_9 = graphene.Float()
-    typerec_minus66 = graphene.Float()
-    typerec_minus10 = graphene.Float()
-    typerec_minus7 = graphene.Float()
-    typerec_minus6 = graphene.Float()
-    typerec_minus1 = graphene.Float()
-    total = graphene.Float()
+class SMoneyObject(ObjectType):
+    typerec = Int()
+    s_money = Float()
 
 
-class Query(graphene.ObjectType):
+class OrderDataObject(ObjectType):
+    cod_pl = Int()
+    for_period = Date()
+    i_owner = Int()
+    supplier = String()
+    cod_u = Int()
+    servicename = String()
+    s_money = List(SMoneyObject)
 
-    suppliers = graphene.List(Supplier, cod_pl=graphene.Argument(graphene.Int))
+
+class RangesOfPeriods(ObjectType):
+    range_periods = String()
+
+
+class Query(ObjectType):
+    suppliers = List(SuppliersObject, cod_pl=Argument(Int))
+    services = List(ServicesObject, cod_pl=Argument(Int))
+    periods = List(PeriodsObject, cod_pl=Argument(Int))
+    periods_by_owner = List(PeriodsByOwnerObject, i_owner=Argument(Int), cod_pl=Argument(Int))
+    order_data = List(OrderDataObject, i_owner=Argument(Int), cod_pl=Argument(Int), range_of_periods=Argument(String))
 
     def resolve_suppliers(self, info, cod_pl=None):
-        if load_data_to_mongo(cod_pl):
-            suppliers = get_suppliers(cod_pl)
+        if not Sql().query_data(cod_pl):
+            return Sql().query_data(cod_pl)
+        else:
+            suppliers = [item['_id'] for item in get_supplers(cod_pl)]
             suppliers_as_obj_list = []
             for item in suppliers:
-                supplier = Supplier(item['i_owner'], item['supplier'])
+                supplier = SuppliersObject(item['i_owner'], item['supplier'])
                 suppliers_as_obj_list.append(supplier)
             return suppliers_as_obj_list
 
-    ranges_of_periods = graphene.List(RangesOfPeriods,
-                                      i_owner=graphene.Argument(graphene.Int),
-                                      cod_pl=graphene.Argument(graphene.Int))
+    def resolve_services(self, info, cod_pl=None):
+        if not Sql().query_data(cod_pl):
+            return Sql().query_data(cod_pl)
+        else:
+            services = [item['_id'] for item in get_services(cod_pl)]
+            services_as_obj_list = []
+            for item in services:
+                service = ServicesObject(item['cod_u'], item['servicename'])
+                services_as_obj_list.append(service)
+            return services_as_obj_list
 
-    def resolve_ranges_of_periods(self, info, i_owner=None, cod_pl=None):
-        if load_data_to_mongo(cod_pl):
-            ranges_of_periods = get_ranges_of_periods(i_owner=i_owner, cod_pl=cod_pl)
-            ranges_of_periods_as_obj_list = []
-            for item in ranges_of_periods:
-                range_of_periods = RangesOfPeriods(item)
-                ranges_of_periods_as_obj_list.append(range_of_periods)
-            return ranges_of_periods_as_obj_list
+    def resolve_periods(self, info, cod_pl=None):
+        if not Sql().query_data(cod_pl):
+            return Sql().query_data(cod_pl)
+        else:
+            periods = [item['_id'] for item in get_periods(cod_pl)]
+            periods_as_obj_list = []
+            for item in periods:
+                period = PeriodsObject(item['for_period'])
+                periods_as_obj_list.append(period)
+            return periods_as_obj_list
 
-    owner_periods = graphene.List(OwnerPeriods, i_owner=graphene.Argument(graphene.Int),
-                                      cod_pl=graphene.Argument(graphene.Int))
+    def resolve_periods_by_owner(self, info, i_owner=None, cod_pl=None):
+        if not Sql().query_data(cod_pl):
+            return Sql().query_data(cod_pl)
+        else:
+            periods = get_periods_by_owner(i_owner=i_owner, cod_pl=cod_pl)
+            periods_as_obj_list = []
+            for item in periods:
+                period = PeriodsByOwnerObject(item)
+                periods_as_obj_list.append(period)
+            return periods_as_obj_list
 
-    def resolve_owner_periods(self, info, i_owner=None, cod_pl=None):
-        if load_data_to_mongo(cod_pl):
-            owner_periods = get_owner_periods(i_owner=i_owner, cod_pl=cod_pl)
-            owner_periods_as_obj_list = []
-            for item in owner_periods:
-                print(item)
-                owner_period = OwnerPeriods(item)
-                owner_periods_as_obj_list.append(owner_period)
-            return owner_periods_as_obj_list
-
-    order = graphene.List(Order,
-                          i_owner=graphene.Argument(graphene.Int),
-                          cod_pl=graphene.Argument(graphene.Int),
-                          range_of_periods=graphene.Argument(graphene.String))
-
-    def resolve_order(self, info, cod_pl=None, i_owner=None, range_of_periods=None):
-        if load_data_to_mongo(cod_pl):
-            order_data = get_order_data(cod_pl=cod_pl, i_owner=i_owner, range_of_periods=range_of_periods)
-            order_data_as_obj_list = []
-            for item in order_data:
-                order_enty = Order(cod_pl=item['_id']['cod_pl'],
-                                   for_period=item['_id']['for_period'],
-                                   i_owner=item['_id']['i_owner'],
-                                   supplier=item['_id']['supplier'],
-                                   cod_u=item['_id']['cod_u'],
-                                   servicename=item['_id']['servicename'],
-                                   typerec_1=item['typerec_1'],
-                                   typerec_2=item['typerec_2'],
-                                   typerec_minus60=item['typerec_minus60'],
-                                   typerec_6=item['typerec_6'],
-                                   typerec_7=item['typerec_7'],
-                                   typerec_9=item['typerec_9'],
-                                   typerec_minus66=item['typerec_minus66'],
-                                   typerec_minus10=item['typerec_minus10'],
-                                   typerec_minus7=item['typerec_minus7'],
-                                   typerec_minus6=item['typerec_minus6'],
-                                   typerec_minus1=item['typerec_minus1'],
-                                   total=item['total']
-                                   )
-                order_data_as_obj_list.append(order_enty)
-            return order_data_as_obj_list
+    def resolve_order_data(self, info, cod_pl=None, i_owner=None):
+        order_data = get_order_data(cod_pl=cod_pl, i_owner=i_owner)
+        order_data_as_obj_list = []
+        for item in order_data:
+            s_money_obj_list = [SMoneyObject(typerec=i['typerec'], s_money=i['s_money']) for i in item['s_money']]
+            order_data_entry = OrderDataObject(cod_pl=item['cod_pl'],
+                                               for_period=item['for_period'],
+                                               i_owner=item['i_owner'],
+                                               supplier=item['supplier'],
+                                               cod_u=item['cod_u'],
+                                               servicename=item['servicename'],
+                                               s_money=s_money_obj_list)
+            order_data_as_obj_list.append(order_data_entry)
+        return order_data_as_obj_list
 
 
-schema = graphene.Schema(query=Query, auto_camelcase=False)
+schema = Schema(query=Query, auto_camelcase=False)
+

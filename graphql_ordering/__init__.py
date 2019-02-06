@@ -1,12 +1,10 @@
-from pprint import pprint
-from flask import Flask, json, request
+from flask import Flask
 from config.json import Config
 from logging.config import dictConfig
 from .api_v1 import create_api as v1
 from mssql import connect as ms
-from .mssqldb import MSqlDBLoader
+from .db import MSqlDBLoader
 from flask_graphql import GraphQLView
-from .database import create_monog_db as mongo
 from .schema import schema
 
 
@@ -22,12 +20,6 @@ def create_app(app=None, config=None):
     app.config.from_object(config.extract('app', uppercase=True))
     v1().init_app(app)
     ms(**config.database)
-    mongo()
     app.add_url_rule('/graphql', view_func=GraphQLView.as_view('graphql', schema=schema, graphiql=True))
-
-    @app.route("/", methods=['POST'])
-    def graphlql_query():
-        data = json.loads(request.data)
-        return json.dumps(schema.execute(data['query']).data)
 
     return app
